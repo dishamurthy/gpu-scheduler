@@ -1,0 +1,332 @@
+{
+  "title": "GPU Job Scheduler",
+  "uid": "gpu-scheduler-main",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "style": "dark",
+  "tags": ["gpu", "scheduler", "infra"],
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 2 },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"display:flex;align-items:center;gap:16px;padding:4px 8px\"><span style=\"font-size:26px;font-weight:700;color:#F46800;letter-spacing:1px\">⚡ GPU JOB SCHEDULER</span><span style=\"font-size:13px;color:#aaa;margin-top:4px\">Distributed scheduling with FIFO · SJF · PRIORITY + preemption</span></div>"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Running Jobs",
+      "gridPos": { "x": 0, "y": 2, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prom-gpu" },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 9 }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "targets": [
+        { "expr": "gpu_jobs_running", "legendFormat": "Running", "refId": "A" }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Total In Queue",
+      "gridPos": { "x": 6, "y": 2, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prom-gpu" },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "orange", "value": 5 },
+              { "color": "red", "value": 15 }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(gpu_jobs_queued_by_priority)",
+          "legendFormat": "Queued",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Completed Jobs",
+      "gridPos": { "x": 12, "y": 2, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prom-gpu" },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "green" },
+          "unit": "short"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(gpu_jobs_total{status=\"COMPLETED\"})",
+          "legendFormat": "Completed",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Preemptions",
+      "gridPos": { "x": 18, "y": 2, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "prom-gpu" },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "targets": [
+        { "expr": "gpu_preemptions_total", "legendFormat": "Preemptions", "refId": "A" }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Queue Depth by Priority",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 9 },
+      "datasource": { "type": "prometheus", "uid": "prom-gpu" },
+      "options": {
+        "tooltip": { "mode": "multi" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "lineWidth": 2, "fillOpacity": 15, "spanNulls": true }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "HIGH" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "MEDIUM" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "LOW" },
+            "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "gpu_jobs_queued_by_priority{priority=\"HIGH\"}",
+          "legendFormat": "HIGH",
+          "refId": "A"
+        },
+        {
+          "expr": "gpu_jobs_queued_by_priority{priority=\"MEDIUM\"}",
+          "legendFormat": "MEDIUM",
+          "refId": "B"
+        },
+        {
+          "expr": "gpu_jobs_queued_by_priority{priority=\"LOW\"}",
+          "legendFormat": "LOW",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Job Wait Time — p95 (seconds)",
+      "gridPos": { "x": 12, "y": 6, "w": 12, "h": 9 },
+      "datasource": { "type": "prometheus", "uid": "prom-gpu" },
+      "options": {
+        "tooltip": { "mode": "single" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "fixed", "fixedColor": "purple" },
+          "custom": { "lineWidth": 2, "fillOpacity": 20, "spanNulls": true },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 30 },
+              { "color": "red", "value": 120 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(gpu_job_wait_seconds_bucket[2m]))",
+          "legendFormat": "p95 wait",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "gauge",
+      "title": "node-01 Utilization",
+      "gridPos": { "x": 0, "y": 15, "w": 6, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prom-gpu" },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdLabels": false, "showThresholdMarkers": true },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.6 },
+              { "color": "red", "value": 0.9 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        { "expr": "gpu_node_utilization_ratio{node=\"node-01\"}", "legendFormat": "node-01", "refId": "A" }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "gauge",
+      "title": "node-02 Utilization",
+      "gridPos": { "x": 6, "y": 15, "w": 6, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prom-gpu" },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdLabels": false, "showThresholdMarkers": true },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.6 },
+              { "color": "red", "value": 0.9 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        { "expr": "gpu_node_utilization_ratio{node=\"node-02\"}", "legendFormat": "node-02", "refId": "A" }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "gauge",
+      "title": "node-03 Utilization",
+      "gridPos": { "x": 12, "y": 15, "w": 6, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prom-gpu" },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdLabels": false, "showThresholdMarkers": true },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.6 },
+              { "color": "red", "value": 0.9 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        { "expr": "gpu_node_utilization_ratio{node=\"node-03\"}", "legendFormat": "node-03", "refId": "A" }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "Active Algorithm",
+      "gridPos": { "x": 18, "y": 15, "w": 6, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "prom-gpu" },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "name",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "#F46800" },
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "●  inactive", "color": "gray" }, "1": { "text": "▶  ACTIVE", "color": "#F46800" } } }
+          ]
+        }
+      },
+      "targets": [
+        { "expr": "gpu_scheduler_algorithm_active{algorithm=\"FIFO\"}", "legendFormat": "FIFO", "refId": "A" },
+        { "expr": "gpu_scheduler_algorithm_active{algorithm=\"SJF\"}", "legendFormat": "SJF", "refId": "B" },
+        { "expr": "gpu_scheduler_algorithm_active{algorithm=\"PRIORITY\"}", "legendFormat": "PRIORITY", "refId": "C" }
+      ]
+    }
+  ]
+}

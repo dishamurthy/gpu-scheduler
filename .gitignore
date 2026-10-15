@@ -1,0 +1,19 @@
+# Go
+*.exe
+*.test
+*.out
+vendor/
+
+# Docker
+.env
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Build artifacts
+/bin/
+/dist/
